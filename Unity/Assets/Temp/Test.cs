@@ -23,7 +23,7 @@ public class Test : MonoBehaviour
     public float spikeWidthRatio = 1.0f;
 
     // Distance between layers
-    private float zStep = 0.01f;
+    public float zStep = 0.01f;
 
     private bool should_generate_board = false;
 
