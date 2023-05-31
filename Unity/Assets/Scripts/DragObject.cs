@@ -4,6 +4,12 @@ using UnityEngine;
 
 public class DragObject : MonoBehaviour
 {
+    Ray ray;
+
+    RaycastHit hit;
+
+    public object targetSpike;
+
     private Vector3 mOffset;
 
     private float mZCoord;
@@ -27,6 +33,12 @@ public class DragObject : MonoBehaviour
     {
         if (isBeingDragged)
         {
+            ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out hit))
+            {
+                print(hit.collider.name);
+                targetSpike = hit.collider;
+            }
             // We just dragged this object and released it.
             gameObject.SendMessage("OnCustomDragEnd");
 
