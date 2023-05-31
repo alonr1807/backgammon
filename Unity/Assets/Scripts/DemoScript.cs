@@ -12,7 +12,7 @@ public class DemoScript : MonoBehaviour
     public Material blackMaterial;
     public Material whiteMaterial;
 
-    public List<Checker> data = new List<Checker>();
+    //public List<Checker> data = new List<Checker>();
     public List<GameObject> checkers = new List<GameObject>();
 
     [SerializeField] Transform[] positions;
@@ -68,10 +68,6 @@ public class DemoScript : MonoBehaviour
 
         private void InsertCheckers(int idx, Checker kind, int num)
         {
-            if (cells[idx] == null)
-            {
-                cells[idx] = new Cell();
-            }
             for (int i = 0; i < num; ++i)
             {
                 cells[idx].contents.Add(kind);
@@ -82,25 +78,30 @@ public class DemoScript : MonoBehaviour
         {
             cells = new Cell[24];
 
+            for(int i = 0; i < cells.Length; i++)
+            {
+                cells[i] = new Cell();
+            }
+
             // White has 5-tower at cells 5 and 12.
-            InsertCheckers(5, Checker.White, 5);
-            InsertCheckers(12, Checker.White, 5);
+            InsertCheckers(11, Checker.White, 5);
+            InsertCheckers(18, Checker.White, 5);
 
             // Black has 5-tower at cells 11 and 18.
-            InsertCheckers(11, Checker.Black, 5);
-            InsertCheckers(18, Checker.Black, 5);
+            InsertCheckers(5, Checker.Black, 5);
+            InsertCheckers(12, Checker.Black, 5);
 
             // White has a 3-tower at cell 7.
-            InsertCheckers(7, Checker.White, 3);
+            InsertCheckers(16, Checker.White, 3);
 
             // Black has a 3-tower at cell 16.
-            InsertCheckers(16, Checker.Black, 3);
+            InsertCheckers(7, Checker.Black, 3);
 
             // White has a 2-tower at cell 23.
-            InsertCheckers(23, Checker.White, 2);
+            InsertCheckers(0, Checker.White, 2);
 
             // Black has a 2-tower at cell 0.
-            InsertCheckers(0, Checker.Black, 2);
+            InsertCheckers(23, Checker.Black, 2);
         }
         /*
             board[0].color = 0;
@@ -173,7 +174,6 @@ public class DemoScript : MonoBehaviour
             return false;
         }
     }
-
     void createCheckerObjects(Cell[] cells)
     {
         Vector3 startPosition = checkerStart.transform.position;
@@ -199,17 +199,19 @@ public class DemoScript : MonoBehaviour
 
        
         }*/
-        int checkerCount = 0;
+
+        
+
         for (int i = 0; i < 24; i++)
         {
             if (cells[i] != null)
             {
-                List<Checker> a = cells[i].contents;
-                for (int d = 0; d < a.Count; d++)
+                List<Checker> cell = cells[i].contents;
+                for (int d = 0; d < cell.Count; d++)
                 {
                     GameObject copy;
 
-                    Checker kind = a[0];
+                    Checker kind = cell[0];
                     if (kind == Checker.White)
                     {
                         copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/WhiteChecker.prefab"));
@@ -220,7 +222,7 @@ public class DemoScript : MonoBehaviour
                     }
                     
 
-                    if(i < 12)
+                    if(i > 11)
                     {
                         copy.transform.position = positions[i].position + distanceDown * d;
                     } else
@@ -231,7 +233,12 @@ public class DemoScript : MonoBehaviour
 
                     copy.SetActive(true);
                     checkers.Add(copy);
-                    checkerCount++;
+                    CheckerData checkerData = copy.GetComponent<CheckerData>();
+
+                    checkerData.setKind((global::Checker)kind);
+                    checkerData.setPosition(i);
+
+                    //Debug.Log(checkerData.getKind() + "" + checkerData.getPosition());
                 }
             }
         }
@@ -239,30 +246,41 @@ public class DemoScript : MonoBehaviour
 
     }
 
-    void updatePositon(Cell[] cells)
+    void updatePositon(Cell[] cells, GameObject checker, int nextPositon)
     {
-        int checkerCount = 0;
-        for(int i = 0; i < 24;i++)
+        CheckerData checkerData = checker.GetComponent<CheckerData>();
+        int previousPosition = checkerData.getPosition();
+        List<Checker> previousCell = cells[previousPosition].contents;
+        Checker currentChecker = previousCell[0];
+        previousCell.RemoveAt(0);
+        if (cells[nextPositon] != null)
         {
-            //Debug.Log(positions[i].position);
-            if (cells[i] != null)
+            List<Checker> nextCell = cells[nextPositon].contents;
+            nextCell.Add(currentChecker);
+            checkerData.setPosition(nextPositon);
+            int d = nextCell.Count;
+            Vector3 distanceDown = checkerDown.transform.position - checkerStart.transform.position;
+            if (nextPositon > 11)
             {
-                List<Checker> a = cells[i].contents;
-                for (int d = 0; d < a.Count; d++)
-                {
-                    checkers[checkerCount].transform.position = positions[i].position;
-                    checkerCount++;
-                }
+                checker.transform.position = positions[nextPositon].position + distanceDown * d;
             }
+            else
+            {
+                checker.transform.position = positions[nextPositon].position - distanceDown * d;
+            }
+        } else
+        {
+
         }
     }
+
 
     // Start is called before the first frame update
     void Start()
     {
         Board board = new Board();
         createCheckerObjects(board.GetCells());
-        //updatePositon(board.GetCells());
+        updatePositon(board.GetCells(), checkers[0], 2);
 
 
         /*

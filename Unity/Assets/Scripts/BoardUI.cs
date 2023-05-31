@@ -49,7 +49,7 @@ public class BoardUI : MonoBehaviour
         }
     }
 
-    private GameObject GenerateTriangle(Vector3[] vertices)
+    private GameObject GenerateTriangle(Vector3[] vertices, bool collision)
     {
         GameObject g = new GameObject();
         g.name = "Triangle";
@@ -60,12 +60,24 @@ public class BoardUI : MonoBehaviour
         mesh.vertices = vertices;
         mesh.uv = new Vector2[] { new Vector2(0, 0), new Vector2(0, 1f), new Vector2(1f, 1f) };
         mesh.triangles = new int[] { 0, 1, 2 };
+
+        if(collision)
+        {
+            g.layer = LayerMask.NameToLayer("Spike");
+            BoxCollider collider = g.AddComponent<BoxCollider>();
+
+            float width = 0.1f;
+            float height = 0.4f;
+            float depth = 0.05f;
+
+            collider.size = new Vector3(width, height, depth);
+        }
         return g;
     }
 
-    private GameObject AddTriangle(Vector3[] vertices, Material material, Transform parent)
+    private GameObject AddTriangle(Vector3[] vertices, Material material, Transform parent, bool collision)
     {
-        GameObject g = GenerateTriangle(vertices);
+        GameObject g = GenerateTriangle(vertices, collision);
         g.transform.parent = parent;
         g.transform.localPosition = Vector3.zero;
         g.GetComponent<MeshRenderer>().material = material;
@@ -74,7 +86,9 @@ public class BoardUI : MonoBehaviour
 
     private GameObject AddTriangle(Vector3[] vertices, Material material)
     {
-        return AddTriangle(vertices, material, transform);
+        GameObject spike = AddTriangle(vertices, material, transform, true);
+        spike.tag = "2";
+        return spike;
     }
 
     private GameObject AddRectangle(Vector3 bottomLeft, Vector3 topRight, Material material, Transform parent)
@@ -87,10 +101,10 @@ public class BoardUI : MonoBehaviour
         rectangle.transform.localPosition = Vector3.zero;
         AddTriangle(new Vector3[] {
             bottomLeft, topLeft, topRight
-        }, material, rectangle.transform);
+        }, material, rectangle.transform, false);
         AddTriangle(new Vector3[] {
             bottomLeft, topRight, bottomRight
-        }, material, rectangle.transform);
+        }, material, rectangle.transform, false);
         return rectangle;
     }
 

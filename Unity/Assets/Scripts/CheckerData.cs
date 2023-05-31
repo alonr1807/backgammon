@@ -20,7 +20,7 @@ public class CheckerData : MonoBehaviour
     {
         return kind;
     }
-    public void setPositon(int p)
+    public void setPosition(int p)
     {
         position = p;
     }

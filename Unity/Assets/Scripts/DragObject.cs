@@ -16,6 +16,7 @@ public class DragObject : MonoBehaviour
 
     private bool isBeingDragged = false;
 
+    public LayerMask layerToHit; 
     void OnMouseDown()
     {
         gameObject.SendMessage("OnCustomDragStart");
@@ -34,11 +35,15 @@ public class DragObject : MonoBehaviour
         if (isBeingDragged)
         {
             ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            if (Physics.Raycast(ray, out hit))
+            Debug.DrawRay(ray.origin, ray.direction, Color.red, 5);
+
+            if (Physics.Raycast(ray, out hit, 10f,layerToHit))
             {
                 print(hit.collider.name);
                 targetSpike = hit.collider;
+
             }
+
             // We just dragged this object and released it.
             gameObject.SendMessage("OnCustomDragEnd");
 

@@ -47,6 +47,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25599efb0a7a32041a64c3556673ae48, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  layerToHit:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!135 &6910328452555098272
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -142,6 +145,10 @@ PrefabInstance:
     - target: {fileID: 8734752122728045111, guid: 867b11f5efd88504f8c3cdd2647c07fb, type: 3}
       propertyPath: m_Name
       value: Checker
+      objectReference: {fileID: 0}
+    - target: {fileID: 8734752122728045111, guid: 867b11f5efd88504f8c3cdd2647c07fb, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 867b11f5efd88504f8c3cdd2647c07fb, type: 3}
