@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class DemoScript : MonoBehaviour
@@ -45,6 +46,10 @@ public class DemoScript : MonoBehaviour
     {
         public List<Checker> contents { get; set; }
 
+        public Cell()
+        {
+            this.contents = new List<Checker>();
+        }
         public Cell(List<Checker> contents)
         {
             this.contents = contents;
@@ -63,9 +68,13 @@ public class DemoScript : MonoBehaviour
 
         private void InsertCheckers(int idx, Checker kind, int num)
         {
+            if (cells[idx] == null)
+            {
+                cells[idx] = new Cell();
+            }
             for (int i = 0; i < num; ++i)
             {
-                //cells[idx].contents.Add(kind);
+                cells[idx].contents.Add(kind);
             }
         }
 
@@ -74,7 +83,7 @@ public class DemoScript : MonoBehaviour
             cells = new Cell[24];
 
             // White has 5-tower at cells 5 and 12.
-            InsertCheckers(0, Checker.White, 5);
+            InsertCheckers(5, Checker.White, 5);
             InsertCheckers(12, Checker.White, 5);
 
             // Black has 5-tower at cells 11 and 18.
@@ -93,6 +102,24 @@ public class DemoScript : MonoBehaviour
             // Black has a 2-tower at cell 0.
             InsertCheckers(0, Checker.Black, 2);
         }
+        /*
+            board[0].color = 0;
+            board[0].count = 2;
+            board[5].color = 1;
+            board[5].count = 5;
+            board[7].color = 1;
+            board[7].count = 3;
+            board[11].color = 0;
+            board[11].count = 5;
+            board[12].color = 1;
+            board[12].count = 5;
+            board[16].color = 0;
+            board[16].count = 3;
+            board[18].color = 0;
+            board[18].count = 5;
+            board[23].color = 1;
+            board[23].count = 2;
+        */
         public Cell[] GetCells()
         {
             return cells;
@@ -146,26 +173,87 @@ public class DemoScript : MonoBehaviour
             return false;
         }
     }
+
     void createCheckerObjects(Cell[] cells)
     {
         Vector3 startPosition = checkerStart.transform.position;
         Vector3 distanceDown = checkerDown.transform.position - checkerStart.transform.position;
         Vector3 distanceLeft = checkerLeft.transform.position - checkerStart.transform.position;
+        /*for (int i = 0; i < 30; i++) {
+            Vector3 startPosition = checkerStart.transform.position;
+            Vector3 distanceDown = checkerDown.transform.position - checkerStart.transform.position;
+            Vector3 distanceLeft = checkerLeft.transform.position - checkerStart.transform.position;
+            GameObject copy;
+            if (i%2 ==0)
+            {
+                copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/BlackChecker.prefab"));
 
-        /*
-        GameObject copy = Instantiate(checkerStart);
-        copy.SetActive(true);
-        copy.transform.position = checkerStart.transform.position + distanceDown * i + distanceLeft * j;
-        checkers.Add(copy);
-        copy.transform.GetChild(0).GetComponent<MeshRenderer>().material = (j % 2 == 0) ? blackMaterial : whiteMaterial;
-        */
+            } else
+            {
+                copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/WhiteChecker.prefab"));
+            }
+            
+
+            copy.SetActive(true);
+            checkers.Add(copy);
+
+       
+        }*/
+        int checkerCount = 0;
+        for (int i = 0; i < 24; i++)
+        {
+            if (cells[i] != null)
+            {
+                List<Checker> a = cells[i].contents;
+                for (int d = 0; d < a.Count; d++)
+                {
+                    GameObject copy;
+
+                    Checker kind = a[0];
+                    if (kind == Checker.White)
+                    {
+                        copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/WhiteChecker.prefab"));
+                    }
+                    else
+                    {
+                        copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/BlackChecker.prefab"));
+                    }
+                    
+
+                    if(i < 12)
+                    {
+                        copy.transform.position = positions[i].position + distanceDown * d;
+                    } else
+                    {
+                        copy.transform.position = positions[i].position - distanceDown * d;
+                    }
+                    
+
+                    copy.SetActive(true);
+                    checkers.Add(copy);
+                    checkerCount++;
+                }
+            }
+        }
+
+
     }
 
     void updatePositon(Cell[] cells)
     {
-        for(int i = 0; i < cells.Length;i++)
+        int checkerCount = 0;
+        for(int i = 0; i < 24;i++)
         {
-            Debug.Log(positions[i].position);
+            //Debug.Log(positions[i].position);
+            if (cells[i] != null)
+            {
+                List<Checker> a = cells[i].contents;
+                for (int d = 0; d < a.Count; d++)
+                {
+                    checkers[checkerCount].transform.position = positions[i].position;
+                    checkerCount++;
+                }
+            }
         }
     }
 
@@ -173,7 +261,8 @@ public class DemoScript : MonoBehaviour
     void Start()
     {
         Board board = new Board();
-        updatePositon(board.GetCells());
+        createCheckerObjects(board.GetCells());
+        //updatePositon(board.GetCells());
 
 
         /*
