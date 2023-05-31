@@ -8,7 +8,7 @@ public class DragObject : MonoBehaviour
 
     RaycastHit hit;
 
-    public object targetSpike;
+    public GameObject targetSpike;
 
     private Vector3 mOffset;
 
@@ -40,8 +40,9 @@ public class DragObject : MonoBehaviour
             if (Physics.Raycast(ray, out hit, 10f,layerToHit))
             {
                 print(hit.collider.name);
-                targetSpike = hit.collider;
-
+                targetSpike = hit.collider.gameObject;
+                SpikeData spikeData = targetSpike.GetComponent<SpikeData>();
+                print(spikeData.getIndex());
             }
 
             // We just dragged this object and released it.

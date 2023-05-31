@@ -84,10 +84,12 @@ public class BoardUI : MonoBehaviour
         return g;
     }
 
-    private GameObject AddTriangle(Vector3[] vertices, Material material)
+    
+    private GameObject AddTriangle(Vector3[] vertices, Material material, int index)
     {
         GameObject spike = AddTriangle(vertices, material, transform, true);
-        spike.tag = "2";
+        SpikeData spikeData = spike.AddComponent<SpikeData>();
+        spikeData.setIndex(index);
         return spike;
     }
 
@@ -163,13 +165,13 @@ public class BoardUI : MonoBehaviour
             {
                 x_offset = 2 * outerMargin + spikeSeparation;
             }
-
+            int index = 12 + i;
             AddTriangle(new Vector3[]
             {
                 new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * (i+0.5f) + spikeSeparation * (i+1), 0 + spikeTipMargin, Layer(2)),
                 new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * i + spikeSeparation * (i+1), 0.5f - outerMargin, Layer(2)),
                 new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * (i+1) + spikeSeparation * (i+1), 0.5f - outerMargin, Layer(2))
-            }, i % 2 == 0 ? spikeAMaterial : spikeBMaterial);
+            }, i % 2 == 0 ? spikeAMaterial : spikeBMaterial, index);
         }
 
         // Draw bottom spikes
@@ -181,13 +183,13 @@ public class BoardUI : MonoBehaviour
             {
                 x_offset = 2 * outerMargin + spikeSeparation;
             }
-
+            int index = 12 - i;
             AddTriangle(new Vector3[]
             {
                 new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * i + spikeSeparation * (i+1), -0.5f + outerMargin, Layer(2)),
                 new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * (i+0.5f) + spikeSeparation * (i+1), 0 - spikeTipMargin, Layer(2)),
                 new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * (i+1) + spikeSeparation * (i+1), -0.5f + outerMargin, Layer(2))
-            }, i % 2 == 1 ? spikeAMaterial : spikeBMaterial);
+            }, i % 2 == 1 ? spikeAMaterial : spikeBMaterial, index);
         }
 
         /*AddTriangle(new Vector3[] {

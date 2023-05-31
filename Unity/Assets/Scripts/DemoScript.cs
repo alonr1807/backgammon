@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class DemoScript : MonoBehaviour
 {
@@ -273,7 +274,8 @@ public class DemoScript : MonoBehaviour
 
         }
     }
-
+    //FIX
+    [SerializeField] Text textObject;
 
     // Start is called before the first frame update
     void Start()
@@ -281,7 +283,10 @@ public class DemoScript : MonoBehaviour
         Board board = new Board();
         createCheckerObjects(board.GetCells());
         updatePositon(board.GetCells(), checkers[0], 2);
+        int dice1 = Random.Range(1, 7);
+        int dice2 = Random.Range(1, 7);
 
+        textObject.text = dice1.ToString() + " " + dice2.ToString();
 
         /*
         Vector3 startPosition = checkerStart.transform.position;
