@@ -61,10 +61,25 @@ public class DemoScript : MonoBehaviour
     {
         private Cell[] cells;
         private Checker turn;
+        private int dice1;
+        private int dice2;
+        
 
         public Board()
         {
             Reset();
+            RollDice();
+        }
+        public void ResetGame()
+        {
+            Reset();
+        }
+        public int[] RollDice()
+        {
+            dice1 = Random.Range(1, 7);
+            dice2 = Random.Range(1, 7);
+            int[] diceVals = { dice1, dice2 };
+            return diceVals;
         }
 
         private void InsertCheckers(int idx, Checker kind, int num)
@@ -75,7 +90,7 @@ public class DemoScript : MonoBehaviour
             }
         }
 
-        public void Reset()
+        private void Reset()
         {
             cells = new Cell[24];
 
@@ -104,28 +119,50 @@ public class DemoScript : MonoBehaviour
             // Black has a 2-tower at cell 0.
             InsertCheckers(23, Checker.Black, 2);
         }
-        /*
-            board[0].color = 0;
-            board[0].count = 2;
-            board[5].color = 1;
-            board[5].count = 5;
-            board[7].color = 1;
-            board[7].count = 3;
-            board[11].color = 0;
-            board[11].count = 5;
-            board[12].color = 1;
-            board[12].count = 5;
-            board[16].color = 0;
-            board[16].count = 3;
-            board[18].color = 0;
-            board[18].count = 5;
-            board[23].color = 1;
-            board[23].count = 2;
-        */
+        
         public Cell[] GetCells()
         {
             return cells;
         }
+        private Checker RemoveChecker(int idx)
+        {
+            int lastCheckerIndex = cells[idx].contents.Count - 1;
+            Checker currentChecker = cells[idx].contents[lastCheckerIndex];
+            cells[idx].contents.RemoveAt(lastCheckerIndex);
+            return currentChecker;
+        }
+        //Polish validatemove
+        private bool ValidateMove(int from, int to)
+        {
+            if(cells[from].contents.Count == 0)
+            {
+                return false;
+            }
+            if(cells[from].contents[cells[from].contents.Count - 1] != turn)
+            {
+                return false;
+            }
+            if(cells[to].contents.Count != 0 && cells[to].contents[cells[to].contents.Count - 1] != turn)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public bool MoveChecker(int from, int to)
+        {
+            if(ValidateMove(from, to))
+            {
+                Checker currentChecker = RemoveChecker(from);
+                InsertCheckers(to, currentChecker, 1);
+                return true;
+            }
+            return false;
+        }
+
+        
+
 
         public void SetTurn(Checker turn)
         {
@@ -177,9 +214,7 @@ public class DemoScript : MonoBehaviour
     }
     void createCheckerObjects(Cell[] cells)
     {
-        Vector3 startPosition = checkerStart.transform.position;
         Vector3 distanceDown = checkerDown.transform.position - checkerStart.transform.position;
-        Vector3 distanceLeft = checkerLeft.transform.position - checkerStart.transform.position;
         /*for (int i = 0; i < 30; i++) {
             Vector3 startPosition = checkerStart.transform.position;
             Vector3 distanceDown = checkerDown.transform.position - checkerStart.transform.position;
@@ -222,7 +257,7 @@ public class DemoScript : MonoBehaviour
                         copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/BlackChecker.prefab"), gameObject.transform);
                     }
                     
-
+                    //fix positions to triangle positions
                     if(i > 11)
                     {
                         copy.transform.position = positions[i].position + distanceDown * d;
@@ -243,8 +278,6 @@ public class DemoScript : MonoBehaviour
                 }
             }
         }
-
-
     }
 
     void updatePositon(Cell[] cells, GameObject checker, int nextPositon)
@@ -287,11 +320,11 @@ public class DemoScript : MonoBehaviour
     void Start()
     {
         Board board = new Board();
+        board.MoveChecker(0, 4);
         createCheckerObjects(board.GetCells());
-        updatePositon(board.GetCells(), checkers[0], 2);
-        int dice1 = Random.Range(1, 7);
-        int dice2 = Random.Range(1, 7);
-
+        //updatePositon(board.GetCells(), checkers[0], 2);
+        int[] diceVals = board.RollDice();
+        int dice1 = diceVals[0]; int dice2 = diceVals[1];
         textObject.text = dice1.ToString() + " " + dice2.ToString();
 
         /*
@@ -313,6 +346,9 @@ public class DemoScript : MonoBehaviour
             }
         }*/
     }
+
+   
+
 
     // Update is called once per frame
     void Update()
