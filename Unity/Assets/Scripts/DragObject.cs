@@ -43,7 +43,8 @@ public class DragObject : MonoBehaviour
                 targetSpike = hit.collider.gameObject;
                 SpikeData spikeData = targetSpike.GetComponent<SpikeData>();
                 print(spikeData.getIndex());
-                gameObject.SendMessageUpwards("getData", spikeData.getIndex());
+                int[] moveData = { gameObject.GetComponent<CheckerData>().getPosition(), spikeData.getIndex() };
+                gameObject.SendMessageUpwards("getData", moveData);
             }
 
             // We just dragged this object and released it.

@@ -279,6 +279,14 @@ public class DemoScript : MonoBehaviour
             }
         }
     }
+    void clearCheckerObjects()
+    {
+        for (int i = checkers.Count - 1; i >= 0; i--)
+        {
+            Destroy(checkers[i]);
+        }
+        checkers.Clear();
+    }
 
     void updatePositon(Cell[] cells, GameObject checker, int nextPositon)
     {
@@ -310,16 +318,19 @@ public class DemoScript : MonoBehaviour
     //FIX
     [SerializeField] Text textObject;
 
-    public void getData(int i)
+    public void getData(int[] moveData)
     {
-        print("data gotten" + i);
+        print("data gotten" + moveData[1]);
+        clearCheckerObjects();
+        board.MoveChecker(moveData[0], moveData[1]);
+        createCheckerObjects(board.GetCells());
     }
-
+    public Board board;
 
     // Start is called before the first frame update
     void Start()
     {
-        Board board = new Board();
+        board = new Board();
         board.MoveChecker(0, 4);
         createCheckerObjects(board.GetCells());
         //updatePositon(board.GetCells(), checkers[0], 2);

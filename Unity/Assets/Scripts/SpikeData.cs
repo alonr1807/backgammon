@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class SpikeData : MonoBehaviour
 {
-    private int index;
+    public int index;
 
     public int getIndex()
     {

@@ -15,7 +15,7 @@ public class DemoAnimation : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        Debug.Log("Started Animation");
+        //Debug.Log("Started Animation");
     }
 
     // Update is called once per frame
@@ -37,13 +37,13 @@ public class DemoAnimation : MonoBehaviour
 
     public void OnCustomDragStart()
     {
-        Debug.Log("Got drag start event");
+        //Debug.Log("Got drag start event");
         startPos = transform.position;
     }
 
     public void OnCustomDragEnd()
     {   
-        Debug.Log("Got drag end event");
+        //Debug.Log("Got drag end event");
         endPos = transform.position;
         transform.position = startPos;
         shouldAnimate = true;

@@ -183,7 +183,7 @@ public class BoardUI : MonoBehaviour
             {
                 x_offset = 2 * outerMargin + spikeSeparation;
             }
-            int index = 12 - i;
+            int index = 11 - i;
             AddTriangle(new Vector3[]
             {
                 new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * i + spikeSeparation * (i+1), -0.5f + outerMargin, Layer(2)),
