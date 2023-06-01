@@ -16,7 +16,7 @@ public class DragObject : MonoBehaviour
 
     private bool isBeingDragged = false;
 
-    public LayerMask layerToHit; 
+    public LayerMask layerToHit;
     void OnMouseDown()
     {
         gameObject.SendMessage("OnCustomDragStart");
@@ -43,6 +43,7 @@ public class DragObject : MonoBehaviour
                 targetSpike = hit.collider.gameObject;
                 SpikeData spikeData = targetSpike.GetComponent<SpikeData>();
                 print(spikeData.getIndex());
+                gameObject.SendMessageUpwards("getData", spikeData.getIndex());
             }
 
             // We just dragged this object and released it.

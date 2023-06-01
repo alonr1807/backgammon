@@ -215,11 +215,11 @@ public class DemoScript : MonoBehaviour
                     Checker kind = cell[0];
                     if (kind == Checker.White)
                     {
-                        copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/WhiteChecker.prefab"));
+                        copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/WhiteChecker.prefab"), gameObject.transform);
                     }
                     else
                     {
-                        copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/BlackChecker.prefab"));
+                        copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/BlackChecker.prefab"), gameObject.transform);
                     }
                     
 
@@ -277,6 +277,12 @@ public class DemoScript : MonoBehaviour
     //FIX
     [SerializeField] Text textObject;
 
+    public void getData(int i)
+    {
+        print("data gotten" + i);
+    }
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -311,10 +317,13 @@ public class DemoScript : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+
+
+        /*
         if (go)
         {
             Debug.Log("You want to move from " + from + " to " + to);
             go = false;
-        }
+        }*/
     }
 }
