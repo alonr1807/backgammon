@@ -6,21 +6,14 @@ using UnityEngine.UI;
 
 public class DemoScript : MonoBehaviour
 {
-    public GameObject checkerStart;
-    public GameObject checkerDown;
-    public GameObject checkerLeft;
-
     public Material blackMaterial;
     public Material whiteMaterial;
 
     //public List<Checker> data = new List<Checker>();
     public List<GameObject> checkers = new List<GameObject>();
 
-    [SerializeField] Transform[] positions;
 
-    public int from;
-    public int to;
-    public bool go = false;
+    
 
     //public List<Vector3> startPos = new List<Vector3>();
 
@@ -134,7 +127,11 @@ public class DemoScript : MonoBehaviour
         //Polish validatemove
         private bool ValidateMove(int from, int to)
         {
-            if(cells[from].contents.Count == 0)
+            if (from == to)
+            {
+                return false;
+            }
+            if (cells[from].contents.Count == 0)
             {
                 return false;
             }
@@ -146,6 +143,8 @@ public class DemoScript : MonoBehaviour
             {
                 return false;
             }
+            
+            
 
             return true;
         }
@@ -214,7 +213,7 @@ public class DemoScript : MonoBehaviour
     }
     void createCheckerObjects(Cell[] cells)
     {
-        Vector3 distanceDown = checkerDown.transform.position - checkerStart.transform.position;
+        //Vector3 distanceDown = checkerDown.transform.position - checkerStart.transform.position;
         /*for (int i = 0; i < 30; i++) {
             Vector3 startPosition = checkerStart.transform.position;
             Vector3 distanceDown = checkerDown.transform.position - checkerStart.transform.position;
@@ -236,7 +235,10 @@ public class DemoScript : MonoBehaviour
        
         }*/
 
-        
+        clearCheckerObjects();
+        float checkerDiameter = 0.05f;
+        Vector3 firstCheckerDistance = new Vector3(0f, checkerDiameter / 2, 0f);
+        Vector3 distanceBetweenCheckers = new Vector3(0f, checkerDiameter, 0f);
 
         for (int i = 0; i < 24; i++)
         {
@@ -256,14 +258,14 @@ public class DemoScript : MonoBehaviour
                     {
                         copy = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/BlackChecker.prefab"), gameObject.transform);
                     }
+                    Vector3 spikePostion = boardUI.GetComponent<BoardUI>().spikePositions[i];
                     
-                    //fix positions to triangle positions
-                    if(i > 11)
+                    if (i > 11)
                     {
-                        copy.transform.position = positions[i].position + distanceDown * d;
+                        copy.transform.position = spikePostion - firstCheckerDistance - distanceBetweenCheckers * d;
                     } else
                     {
-                        copy.transform.position = positions[i].position - distanceDown * d;
+                        copy.transform.position = spikePostion + firstCheckerDistance + distanceBetweenCheckers * d;
                     }
                     
 
@@ -280,14 +282,15 @@ public class DemoScript : MonoBehaviour
         }
     }
     void clearCheckerObjects()
-    {
+    {   
         for (int i = checkers.Count - 1; i >= 0; i--)
         {
             Destroy(checkers[i]);
         }
         checkers.Clear();
     }
-
+    //FIX updatePosition to apply changes with spikes
+    /*
     void updatePositon(Cell[] cells, GameObject checker, int nextPositon)
     {
         CheckerData checkerData = checker.GetComponent<CheckerData>();
@@ -301,7 +304,7 @@ public class DemoScript : MonoBehaviour
             nextCell.Add(currentChecker);
             checkerData.setPosition(nextPositon);
             int d = nextCell.Count;
-            Vector3 distanceDown = checkerDown.transform.position - checkerStart.transform.position;
+            //Vector3 distanceDown = checkerDown.transform.position - checkerStart.transform.position;
             if (nextPositon > 11)
             {
                 checker.transform.position = positions[nextPositon].position + distanceDown * d;
@@ -314,18 +317,25 @@ public class DemoScript : MonoBehaviour
         {
 
         }
-    }
+    }*/
     //FIX
     [SerializeField] Text textObject;
 
-    public void getData(int[] moveData)
+    [SerializeField] GameObject boardUI;
+    public void GetMoveData(int[] moveData)
     {
-        print("data gotten" + moveData[1]);
-        clearCheckerObjects();
+        print("From: " + moveData[0] + "  To: " + moveData[1]);
         board.MoveChecker(moveData[0], moveData[1]);
         createCheckerObjects(board.GetCells());
     }
     public Board board;
+
+    public void RollDice()
+    {
+        int[] diceVals = board.RollDice();
+        int dice1 = diceVals[0]; int dice2 = diceVals[1];
+        textObject.text = dice1.ToString() + " " + dice2.ToString();
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -337,6 +347,7 @@ public class DemoScript : MonoBehaviour
         int[] diceVals = board.RollDice();
         int dice1 = diceVals[0]; int dice2 = diceVals[1];
         textObject.text = dice1.ToString() + " " + dice2.ToString();
+
 
         /*
         Vector3 startPosition = checkerStart.transform.position;

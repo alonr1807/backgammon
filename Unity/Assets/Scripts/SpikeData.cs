@@ -6,6 +6,8 @@ public class SpikeData : MonoBehaviour
 {
     public int index;
 
+    public Transform spikePosition;
+
     public int getIndex()
     {
         return index;
@@ -16,10 +18,15 @@ public class SpikeData : MonoBehaviour
         index = i;
     }
 
+    public Transform getSpikePosition()
+    {
+        return spikePosition;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        
+        spikePosition = gameObject.transform;
     }
 
     // Update is called once per frame

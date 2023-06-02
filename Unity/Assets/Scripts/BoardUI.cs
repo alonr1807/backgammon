@@ -120,9 +120,12 @@ public class BoardUI : MonoBehaviour
         return -zStep * index;
     }
 
+    public Vector3[] spikePositions = new Vector3[24];
+
     private void GenerateBoard()
     {
         ClearChildren();
+        
 
         float halfBoard = boardWidth / 2;
 
@@ -166,6 +169,7 @@ public class BoardUI : MonoBehaviour
                 x_offset = 2 * outerMargin + spikeSeparation;
             }
             int index = 12 + i;
+            spikePositions[index] = new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * (i + 0.5f) + spikeSeparation * (i + 1), 0.5f - outerMargin, Layer(2));
             AddTriangle(new Vector3[]
             {
                 new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * (i+0.5f) + spikeSeparation * (i+1), 0 + spikeTipMargin, Layer(2)),
@@ -184,6 +188,7 @@ public class BoardUI : MonoBehaviour
                 x_offset = 2 * outerMargin + spikeSeparation;
             }
             int index = 11 - i;
+            spikePositions[index] = new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * (i + 0.5f) + spikeSeparation * (i + 1), -0.5f + outerMargin, Layer(2));
             AddTriangle(new Vector3[]
             {
                 new Vector3(x_offset + -halfBoard + outerMargin + spikeWidth * i + spikeSeparation * (i+1), -0.5f + outerMargin, Layer(2)),
