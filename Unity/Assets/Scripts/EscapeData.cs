@@ -4,9 +4,9 @@ using UnityEngine;
 
 public class EscapeData : MonoBehaviour
 {
-    [SerializeField] Checker kind;
+    [SerializeField] Kind kind;
 
-    public Checker getEscapeKind()
+    public Kind getEscapeKind()
     {
         return kind;
     }

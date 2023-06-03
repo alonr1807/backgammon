@@ -4,14 +4,14 @@ using UnityEngine;
 
 public class CheckerData : MonoBehaviour
 {
-    private Checker kind;
+    private Kind kind;
     private int position;
 
-    public void setKind(Checker k)
+    public void setKind(Kind k)
     {
         kind = k;
     }
-    public Checker getKind()
+    public Kind getKind()
     {
         return kind;
     }

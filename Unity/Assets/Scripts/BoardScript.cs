@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 
 //for communication between DragObject
-public enum Checker
+public enum Kind
 {
     White,
     Black
@@ -36,11 +36,14 @@ public class BoardScript : MonoBehaviour
             }
         }
         private Cell[] cells;
-        private Checker turn;
+        private Kind turn;
         private int dice1;
         private int dice2;
         private int whiteEscapes;
         private int blackEscapes;
+        private int turns;
+        private bool dice1IsUsed;
+        private bool dice2IsUsed;
 
         //used for hierarchy
         private GameObject parentObject;
@@ -68,7 +71,7 @@ public class BoardScript : MonoBehaviour
             return diceVals;
         }
         
-        private void InsertCheckers(int idx, Checker kind, int num)
+        private void InsertCheckers(int idx, Kind kind, int num)
         {
             float checkerDiameter = 0.05f;
             Vector3 firstCheckerDistance = new Vector3(0f, checkerDiameter / 2, 0f);
@@ -77,7 +80,7 @@ public class BoardScript : MonoBehaviour
             {
                 GameObject checkerObject;
 
-                if (kind == Checker.White)
+                if (kind == Kind.White)
                 {
                     checkerObject = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/WhiteChecker.prefab"), parentObject.transform);
                 }
@@ -109,6 +112,11 @@ public class BoardScript : MonoBehaviour
         private void Reset()
         {
             cells = new Cell[24];
+            whiteEscapes = 0;
+            blackEscapes = 0;
+            dice1IsUsed = false;
+            dice2IsUsed = false;
+            turns = 0;
 
             for (int i = 0; i < cells.Length; i++)
             {
@@ -116,24 +124,24 @@ public class BoardScript : MonoBehaviour
             }
 
             // White has 5-tower at cells 5 and 12.
-            InsertCheckers(11, Checker.White, 5);
-            InsertCheckers(18, Checker.White, 5);
+            InsertCheckers(11, Kind.White, 5);
+            InsertCheckers(18, Kind.White, 5);
 
             // Black has 5-tower at cells 11 and 18.
-            InsertCheckers(5, Checker.Black, 5);
-            InsertCheckers(12, Checker.Black, 5);
+            InsertCheckers(5, Kind.Black, 5);
+            InsertCheckers(12, Kind.Black, 5);
 
             // White has a 3-tower at cell 7.
-            InsertCheckers(16, Checker.White, 3);
+            InsertCheckers(16, Kind.White, 3);
 
             // Black has a 3-tower at cell 16.
-            InsertCheckers(7, Checker.Black, 3);
+            InsertCheckers(7, Kind.Black, 3);
 
             // White has a 2-tower at cell 23.
-            InsertCheckers(0, Checker.White, 2);
+            InsertCheckers(0, Kind.White, 2);
 
             // Black has a 2-tower at cell 0.
-            InsertCheckers(23, Checker.Black, 2);
+            InsertCheckers(23, Kind.Black, 2);
         }
 
         private GameObject RemoveChecker(int idx)
@@ -144,28 +152,71 @@ public class BoardScript : MonoBehaviour
             return currentChecker;
         }
 
-        //Polish validatemove
         private bool ValidateMove(int from, int to)
         {
+            // from doesnt equal to
             if (from == to)
             {
                 return false;
             }
+            // from count doesnt equal 0
             if (cells[from].contents.Count == 0)
             {
                 return false;
             }
+            // from checker doesnt equal turn's kind
             if (cells[from].contents[cells[from].contents.Count - 1].GetComponent<CheckerData>().getKind() != turn)
             {
                 return false;
             }
+            // to checker doesnt equal turn's kind
             if (cells[to].contents.Count != 0 && cells[to].contents[cells[to].contents.Count - 1].GetComponent<CheckerData>().getKind() != turn)
             {
                 return false;
             }
+            int distance = Mathf.Abs(to - from);
+
+            // if double
+            if (dice1 == dice2)
+            {
+                // if distance doesnt equal the dice or turns is more than 4
+                if (distance != dice1 || turns > 3)
+                {
+                    return false;
+                }
+            } else
+            {
+                // exceeded turns (this case doesnt matter)
+                if (turns > 1)
+                {
+                    return false;
+                }
+                // dice 1 is choosen
+                if (distance == dice1 && !dice1IsUsed)
+                {
+                    dice1IsUsed = true;
+                } else if(dice1IsUsed && distance == dice1) // dice 1 is already used 
+                {
+                    return false;
+                }
+                // dice 2 is choosen
+                if (distance == dice2 && !dice2IsUsed)
+                {
+                    dice2IsUsed = true;
+                }
+                else if (dice2IsUsed && distance == dice2) // dice 2 is already used 
+                {
+                    return false;
+                }
+                // no dice is used
+                if (distance != dice1 && distance != dice2)
+                {
+                    return false;
+                }
+            }
 
 
-
+            turns++;
             return true;
         }
 
@@ -194,7 +245,39 @@ public class BoardScript : MonoBehaviour
                 currentChecker.SendMessage("OnCustomDragEnd", outData);
             }
         }
+        private class checkerC
+        {
+            public GameObject gobj;
+            public Vector3 oldPos;
+            public int from;
+            public int to;
+            public checkerC(GameObject gobj, Vector3 oldPos, int from, int to)
+            {
+                this.gobj = gobj;
+                this.oldPos = oldPos;
+                this.from = from;
+                this.to = to;
+            }
+        }
+        private List<checkerC> CheckerCache = new List<checkerC>();
 
+        private Vector3 locatePosition(int to)
+        {
+            Vector3 movePostion = boardUI.GetComponent<BoardUI>().spikePositions[to];
+            float checkerDiameter = 0.05f;
+            Vector3 firstCheckerDistance = new Vector3(0f, checkerDiameter / 2, 0f);
+            Vector3 distanceBetweenCheckers = new Vector3(0f, checkerDiameter, 0f);
+            int d = cells[to].contents.Count;
+            if (to > 11)
+            {
+                movePostion += -firstCheckerDistance - distanceBetweenCheckers * d;
+            }
+            else
+            {
+                movePostion += firstCheckerDistance + distanceBetweenCheckers * d;
+            }
+            return movePostion;
+        }
         public bool MoveChecker(int to, GameObject currentCheckerObject)
         {
             int from = currentCheckerObject.GetComponent<CheckerData>().getPosition();
@@ -202,8 +285,6 @@ public class BoardScript : MonoBehaviour
             bool successfulMove = false;
             if (ValidateMove(from, to))
             {
-                Checker kind = currentCheckerObject.GetComponent<CheckerData>().getKind();
-
                 movePostion = boardUI.GetComponent<BoardUI>().spikePositions[to];
                 float checkerDiameter = 0.05f;
                 Vector3 firstCheckerDistance = new Vector3(0f, checkerDiameter / 2, 0f);
@@ -219,6 +300,8 @@ public class BoardScript : MonoBehaviour
                 }
                 cells[to].contents.Add(currentCheckerObject);
                 cells[from].contents.Remove(currentCheckerObject);
+                CheckerCache.Add(new checkerC(currentCheckerObject, currentCheckerObject.GetComponent<DemoAnimation>().getStartPos(), from, to));
+
                 currentCheckerObject.GetComponent<CheckerData>().setPosition(to);
 
                 updateCellCheckerPositions(from);
@@ -242,13 +325,29 @@ public class BoardScript : MonoBehaviour
             }
         }
 
-        public void SetTurn(Checker turn)
+        public void SetTurn()
         {
-            this.turn = turn;
+            if(turn == Kind.White)
+            {
+                turn = Kind.Black;
+            } else
+            {
+                turn = Kind.White;
+            }
         }
 
         public bool ValidateEscape(int from)
         {
+            if (cells[from].contents.Count == 0)
+            {
+                return false;
+            }
+            if (cells[from].contents[cells[from].contents.Count - 1].GetComponent<CheckerData>().getKind() != turn)
+            {
+                return false;
+            }
+            
+
             return true;
         }
         public bool EscapeChecker(GameObject currentCheckerObject, GameObject escapeObject)
@@ -258,10 +357,18 @@ public class BoardScript : MonoBehaviour
             bool successfulEscape = false;
             if (ValidateEscape(from))
             {
+                if(currentCheckerObject.GetComponent<CheckerData>().getKind() == Kind.White)
+                {
+                    escapePos = new Vector3(escapeObject.transform.position.x + 0.05f * (whiteEscapes/5), escapeObject.transform.position.y + 0.05f * (whiteEscapes % 5), currentCheckerObject.transform.position.z);
+                    whiteEscapes++;
+                } else
+                {
+                    escapePos = new Vector3(escapeObject.transform.position.x, escapeObject.transform.position.y - 0.05f * blackEscapes, currentCheckerObject.transform.position.z);
+                    blackEscapes++;
+                }
                 
-                escapePos = new Vector3(escapeObject.transform.position.x, escapeObject.transform.position.y, currentCheckerObject.transform.position.z);
-
                 cells[from].contents.Remove(currentCheckerObject);
+                
                 updateCellCheckerPositions(from);
                 successfulEscape = true;
             }
@@ -269,6 +376,29 @@ public class BoardScript : MonoBehaviour
             Destroy(currentCheckerObject.GetComponent<DragObject>());
             currentCheckerObject.SendMessage("OnCustomDragEnd", new DataPackage(escapePos, successfulEscape));
             return true;
+        }
+
+        public void StartTurn()
+        {
+            SetTurn();
+        }
+        public void ResetTurn()
+        {
+            //move the objects back first
+            for (int i = CheckerCache.Count - 1; i >= 0; i--)
+            {
+                GameObject currentCheckerObject = CheckerCache[i].gobj;
+                currentCheckerObject.SendMessage("OnCustomDragStart");
+                Vector3 movePostion = locatePosition(CheckerCache[i].from);
+                currentCheckerObject.SendMessage("OnCustomDragEnd", new DataPackage(movePostion, true));
+                cells[CheckerCache[i].from].contents.Add(currentCheckerObject);
+                cells[CheckerCache[i].to].contents.Remove(currentCheckerObject);
+                currentCheckerObject.GetComponent<CheckerData>().setPosition(CheckerCache[i].from);
+                CheckerCache.RemoveAt(i);
+            }
+            dice1IsUsed = false;
+            dice2IsUsed = false;
+            turns = 0;
         }
     }
     
@@ -295,11 +425,22 @@ public class BoardScript : MonoBehaviour
         textObject.text = dice1.ToString() + " " + dice2.ToString();
     }
 
+    public void startTurn()
+    {
+        RollDice();
+        CheckerBoard.StartTurn();
+
+    }
+    public void resetTurn()
+    {
+        CheckerBoard.ResetTurn();
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         CheckerBoard = new Board(gameObject, boardUI);
-        RollDice();
+        startTurn();
 
 
     }

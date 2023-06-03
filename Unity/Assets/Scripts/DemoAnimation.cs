@@ -40,6 +40,10 @@ public class DemoAnimation : MonoBehaviour
         //Debug.Log("Got drag start event");
         startPos = transform.position;
     }
+    public Vector3 getStartPos()
+    {
+        return startPos;
+    }
     
     public void OnCustomDragEnd(DataPackage datapack)
     {
