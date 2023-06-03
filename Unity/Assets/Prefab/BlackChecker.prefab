@@ -47,10 +47,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 25599efb0a7a32041a64c3556673ae48, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  targetSpike: {fileID: 0}
-  layerToHit:
+  SpikeLayer:
     serializedVersion: 2
     m_Bits: 64
+  EscapeLayer:
+    serializedVersion: 2
+    m_Bits: 128
 --- !u!135 &6471082049855948527
 SphereCollider:
   m_ObjectHideFlags: 0

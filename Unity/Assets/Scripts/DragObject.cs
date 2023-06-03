@@ -8,15 +8,21 @@ public class DragObject : MonoBehaviour
 
     RaycastHit hit;
 
-    public GameObject targetSpike;
-
     private Vector3 mOffset;
 
     private float mZCoord;
 
     private bool isBeingDragged = false;
 
-    public LayerMask layerToHit;
+    [SerializeField] LayerMask SpikeLayer;
+    [SerializeField] LayerMask EscapeLayer;
+
+    private void Start()
+    {
+        //SpikeLayer = LayerMask.NameToLayer("Spike");
+        //EscapeLayer = LayerMask.NameToLayer("Escape");
+    }
+
     void OnMouseDown()
     {
         gameObject.SendMessage("OnCustomDragStart");
@@ -29,6 +35,41 @@ public class DragObject : MonoBehaviour
 
         isBeingDragged = true;
     }
+    private bool handleSpikeMove()
+    {
+        if(Physics.Raycast(ray, out hit, 10f, SpikeLayer))
+        {
+            GameObject targetSpikeObject = hit.collider.gameObject;
+            SpikeData spikeData = targetSpikeObject.GetComponent<SpikeData>();
+            int moveTo = spikeData.getIndex();
+            DataPackage dataPackage = new DataPackage(moveTo, gameObject);
+            gameObject.SendMessageUpwards("GetMoveData", dataPackage);
+            return true;
+        }
+        return false;
+    }
+    private bool handleEscapeMove()
+    {
+        if (Physics.Raycast(ray, out hit, 10f, EscapeLayer))
+        {
+            GameObject escapeObject = hit.collider.gameObject;
+            EscapeData escapeData = escapeObject.GetComponent<EscapeData>();
+            //question: do u handle the if statement of checker type here like i did or do it in the main file
+            if (escapeData.getEscapeKind() == gameObject.GetComponent<CheckerData>().getKind())
+            {
+                DataPackage dataPackage = new DataPackage(true, gameObject, escapeObject);
+                gameObject.SendMessageUpwards("GetMoveData", dataPackage);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void handleNoMove()
+    {
+        DataPackage dataPackage = new DataPackage(new Vector3(), false);
+        gameObject.SendMessage("OnCustomDragEnd", dataPackage);
+    }
 
     void OnMouseUp()
     {
@@ -36,22 +77,9 @@ public class DragObject : MonoBehaviour
         {
             ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             Debug.DrawRay(ray.origin, ray.direction, Color.red, 5);
-
-            if (Physics.Raycast(ray, out hit, 10f, layerToHit))
+            if(!handleSpikeMove() && !handleEscapeMove())
             {
-                //print(hit.collider.name);
-                targetSpike = hit.collider.gameObject;
-                SpikeData spikeData = targetSpike.GetComponent<SpikeData>();
-                //print(spikeData.getIndex());
-                int[] moveData = { gameObject.GetComponent<CheckerData>().getPosition(), spikeData.getIndex() };
-                DataPackage dataPackage = new DataPackage(moveData, gameObject);
-                gameObject.SendMessageUpwards("GetMoveData", dataPackage);
-            } 
-            else
-            {
-
-                DataPackage dataPackage = new DataPackage(new Vector3(), false);
-                gameObject.SendMessage("OnCustomDragEnd", dataPackage);
+                handleNoMove();
             }
 
 

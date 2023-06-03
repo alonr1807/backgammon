@@ -4,9 +4,8 @@ using UnityEngine;
 
 public class SpikeData : MonoBehaviour
 {
-    public int index;
-
-    public Transform spikePosition;
+    private int index;
+    private Transform spikePosition;
 
     public int getIndex()
     {
@@ -27,11 +26,5 @@ public class SpikeData : MonoBehaviour
     void Start()
     {
         spikePosition = gameObject.transform;
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

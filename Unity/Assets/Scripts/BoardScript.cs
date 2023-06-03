@@ -12,26 +12,18 @@ public enum Checker
 }
 
 public class BoardScript : MonoBehaviour
-{
-    public List<GameObject> checkers = new List<GameObject>();
+{ 
+    //FIX
+    [SerializeField] Text textObject;
 
-    public class Cell
-    {
-        public List<Checker> contents { get; set; }
+    [SerializeField] GameObject boardUI;
 
-        public Cell()
-        {
-            contents = new List<Checker>();
-        }
-        public Cell(List<Checker> contents)
-        {
-            this.contents = contents;
-        }
-    }
-    public class Board
+    private static Board CheckerBoard;
+
+    private class Board
     {
-        
-        public class Cell
+
+        private class Cell
         {
             public List<GameObject> contents { get; set; }
             public Cell()
@@ -47,10 +39,13 @@ public class BoardScript : MonoBehaviour
         private Checker turn;
         private int dice1;
         private int dice2;
+        private int whiteEscapes;
+        private int blackEscapes;
 
         //used for hierarchy
-        public GameObject parentObject;
-        public GameObject boardUI;
+        private GameObject parentObject;
+        //used for spikedata
+        private GameObject boardUI;
 
         public Board(GameObject parentObject, GameObject boardUI)
         {
@@ -59,10 +54,12 @@ public class BoardScript : MonoBehaviour
             Reset();
             RollDice();
         }
+
         public void ResetGame()
         {
             Reset();
         }
+
         public int[] RollDice()
         {
             dice1 = Random.Range(1, 7);
@@ -108,6 +105,7 @@ public class BoardScript : MonoBehaviour
                 checkerData.setPosition(idx);
             }
         }
+
         private void Reset()
         {
             cells = new Cell[24];
@@ -138,10 +136,6 @@ public class BoardScript : MonoBehaviour
             InsertCheckers(23, Checker.Black, 2);
         }
 
-        public Cell[] GetCells()
-        {
-            return cells;
-        }
         private GameObject RemoveChecker(int idx)
         {
             int lastCheckerIndex = cells[idx].contents.Count - 1;
@@ -149,6 +143,7 @@ public class BoardScript : MonoBehaviour
             cells[idx].contents.RemoveAt(lastCheckerIndex);
             return currentChecker;
         }
+
         //Polish validatemove
         private bool ValidateMove(int from, int to)
         {
@@ -173,6 +168,7 @@ public class BoardScript : MonoBehaviour
 
             return true;
         }
+
         public void updateCellCheckerPositions(int cellIndex)
         {
             for(int i = 0; i < cells[cellIndex].contents.Count; i++)
@@ -199,36 +195,36 @@ public class BoardScript : MonoBehaviour
             }
         }
 
-        public bool MoveChecker(int from, int to, GameObject currentChecker)
+        public bool MoveChecker(int to, GameObject currentCheckerObject)
         {
-            DataPackage outData = new DataPackage(new Vector3(), false);
+            int from = currentCheckerObject.GetComponent<CheckerData>().getPosition();
+            Vector3 movePostion = new Vector3();
             bool successfulMove = false;
             if (ValidateMove(from, to))
             {
-                successfulMove = true;
-                Checker kind = currentChecker.GetComponent<CheckerData>().getKind();
+                Checker kind = currentCheckerObject.GetComponent<CheckerData>().getKind();
 
-                Vector3 outPos = boardUI.GetComponent<BoardUI>().spikePositions[to];
+                movePostion = boardUI.GetComponent<BoardUI>().spikePositions[to];
                 float checkerDiameter = 0.05f;
                 Vector3 firstCheckerDistance = new Vector3(0f, checkerDiameter / 2, 0f);
                 Vector3 distanceBetweenCheckers = new Vector3(0f, checkerDiameter, 0f);
                 int d = cells[to].contents.Count;
                 if (to > 11)
                 {
-                    outPos += -firstCheckerDistance - distanceBetweenCheckers * d;
+                    movePostion += -firstCheckerDistance - distanceBetweenCheckers * d;
                 }
                 else
                 {
-                    outPos += firstCheckerDistance + distanceBetweenCheckers * d;
+                    movePostion += firstCheckerDistance + distanceBetweenCheckers * d;
                 }
-                cells[to].contents.Add(currentChecker);
-                cells[from].contents.Remove(currentChecker);
-                currentChecker.GetComponent<CheckerData>().setPosition(to);
+                cells[to].contents.Add(currentCheckerObject);
+                cells[from].contents.Remove(currentCheckerObject);
+                currentCheckerObject.GetComponent<CheckerData>().setPosition(to);
 
-                outData = new DataPackage(outPos, successfulMove);
                 updateCellCheckerPositions(from);
+                successfulMove = true;
             }
-            currentChecker.SendMessage("OnCustomDragEnd", outData);
+            currentCheckerObject.SendMessage("OnCustomDragEnd", new DataPackage(movePostion, successfulMove));
 
             
             return successfulMove;
@@ -246,29 +242,50 @@ public class BoardScript : MonoBehaviour
             }
         }
 
-
         public void SetTurn(Checker turn)
         {
             this.turn = turn;
         }
+
+        public bool ValidateEscape(int from)
+        {
+            return true;
+        }
+        public bool EscapeChecker(GameObject currentCheckerObject, GameObject escapeObject)
+        {
+            int from = currentCheckerObject.GetComponent<CheckerData>().getPosition();
+            Vector3 escapePos = new Vector3();
+            bool successfulEscape = false;
+            if (ValidateEscape(from))
+            {
+                
+                escapePos = new Vector3(escapeObject.transform.position.x, escapeObject.transform.position.y, currentCheckerObject.transform.position.z);
+
+                cells[from].contents.Remove(currentCheckerObject);
+                updateCellCheckerPositions(from);
+                successfulEscape = true;
+            }
+
+            Destroy(currentCheckerObject.GetComponent<DragObject>());
+            currentCheckerObject.SendMessage("OnCustomDragEnd", new DataPackage(escapePos, successfulEscape));
+            return true;
+        }
     }
     
     
-
-    //FIX
-    [SerializeField] Text textObject;
-
-    [SerializeField] GameObject boardUI;
-
-    
-    private static Board CheckerBoard;
     public void GetMoveData(DataPackage dataPackage)
     {
-        int from = dataPackage.moveData[0];
-        int to = dataPackage.moveData[1];
-        print("From: " + from + "  To: " + to);
+        if(!dataPackage.escape)
+        {
+            int to = dataPackage.moveTo;
+            print("  To: " + to);
 
-        bool valid = CheckerBoard.MoveChecker(from, to, dataPackage.gObj);
+            bool valid = CheckerBoard.MoveChecker(to, dataPackage.checkerObject);
+        } else
+        {
+            bool valid = CheckerBoard.EscapeChecker(dataPackage.checkerObject, dataPackage.escapeObject);
+        }
+        
     }
 
     public void RollDice()
