@@ -11,7 +11,7 @@ public enum Checker
     Black
 }
 
-public class DemoScript : MonoBehaviour
+public class BoardScript : MonoBehaviour
 {
     public List<GameObject> checkers = new List<GameObject>();
 
@@ -82,7 +82,6 @@ public class DemoScript : MonoBehaviour
 
                 if (kind == Checker.White)
                 {
-                    print(parentObject);
                     checkerObject = Instantiate(AssetDatabase.LoadAssetAtPath<GameObject>("Assets/Prefab/WhiteChecker.prefab"), parentObject.transform);
                 }
                 else
@@ -227,10 +226,11 @@ public class DemoScript : MonoBehaviour
                 currentChecker.GetComponent<CheckerData>().setPosition(to);
 
                 outData = new DataPackage(outPos, successfulMove);
+                updateCellCheckerPositions(from);
             }
             currentChecker.SendMessage("OnCustomDragEnd", outData);
 
-            updateCellCheckerPositions(from);
+            
             return successfulMove;
         }
 
@@ -270,9 +270,6 @@ public class DemoScript : MonoBehaviour
 
         bool valid = CheckerBoard.MoveChecker(from, to, dataPackage.gObj);
     }
-
-
-    public global::Board board;
 
     public void RollDice()
     {
