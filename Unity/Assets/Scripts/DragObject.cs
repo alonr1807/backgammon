@@ -37,18 +37,26 @@ public class DragObject : MonoBehaviour
             ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             Debug.DrawRay(ray.origin, ray.direction, Color.red, 5);
 
-            if (Physics.Raycast(ray, out hit, 10f,layerToHit))
+            if (Physics.Raycast(ray, out hit, 10f, layerToHit))
             {
                 //print(hit.collider.name);
                 targetSpike = hit.collider.gameObject;
                 SpikeData spikeData = targetSpike.GetComponent<SpikeData>();
                 //print(spikeData.getIndex());
                 int[] moveData = { gameObject.GetComponent<CheckerData>().getPosition(), spikeData.getIndex() };
-                gameObject.SendMessageUpwards("GetMoveData", moveData);
+                DataPackage dataPackage = new DataPackage(moveData, gameObject);
+                gameObject.SendMessageUpwards("GetMoveData", dataPackage);
+            } 
+            else
+            {
+
+                DataPackage dataPackage = new DataPackage(new Vector3(), false);
+                gameObject.SendMessage("OnCustomDragEnd", dataPackage);
             }
 
+
             // We just dragged this object and released it.
-            gameObject.SendMessage("OnCustomDragEnd");
+            //  gameObject.SendMessage("OnCustomDragEnd");
 
             isBeingDragged = false;
         }

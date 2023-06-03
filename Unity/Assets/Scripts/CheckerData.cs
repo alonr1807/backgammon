@@ -6,6 +6,7 @@ public class CheckerData : MonoBehaviour
 {
     private Checker kind;
     private int position;
+
     // Start is called before the first frame update
     void Start()
     {

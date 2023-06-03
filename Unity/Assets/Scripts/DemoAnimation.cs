@@ -40,14 +40,20 @@ public class DemoAnimation : MonoBehaviour
         //Debug.Log("Got drag start event");
         startPos = transform.position;
     }
-
-    public void OnCustomDragEnd()
-    {   
+    
+    public void OnCustomDragEnd(DataPackage datapack)
+    {
         //Debug.Log("Got drag end event");
-        endPos = transform.position;
-        transform.position = startPos;
-        shouldAnimate = true;
-        
+        if (datapack.valid)
+        {
+            endPos = datapack.finalPos;
+            transform.position = startPos;
+            shouldAnimate = true;
+        }
+        else
+        {
+            transform.position = startPos;
+        }
     
         //startTime = Time.time;
     }

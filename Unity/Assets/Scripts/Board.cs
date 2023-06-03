@@ -2,11 +2,11 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum Checker
+/*public enum Checker
 {
     White,
     Black
-}
+}*/
 
 public class Cell
 {
