@@ -4,6 +4,7 @@ using UnityEngine;
 
 public class DataPackage
 {
+
     public int moveTo;
     public GameObject checkerObject;
     public Vector3 finalPos;
