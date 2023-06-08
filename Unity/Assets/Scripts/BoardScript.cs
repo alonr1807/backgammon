@@ -656,39 +656,6 @@ public class BoardScript : MonoBehaviour
                         blackCaptured.Add(incache.checkerObject);
                     }
                 }
-                /*
-                if (CheckerCache[i].gobj == null)
-                {
-                    GameObject capturer = CheckerCache[i].capturer;
-                    GameObject captured = CheckerCache[i].captured;
-                    capturer.SendMessage("OnCustomDragStart");
-                    captured.SendMessage("OnCustomDragStart");
-                    cells[to].contents.Remove(capturer);
-                    Vector3 capturerMovePosition = locatePosition(from);
-                    Vector3 capturedMovePosition = locatePosition(to);
-                    capturer.SendMessage("OnCustomDragEnd", new DataPackage(capturerMovePosition, true));
-                    captured.SendMessage("OnCustomDragEnd", new DataPackage(capturedMovePosition, true));
-                    cells[to].contents.Add(captured);
-                    cells[from].contents.Add(capturer);
-                    capturer.GetComponent<CheckerData>().setPosition(from);
-                    captured.GetComponent<CheckerData>().setPosition(to);
-                    if(turn == Kind.White)
-                    {
-                        blackCaptured.Remove(captured);
-                    } else
-                    {
-                        whiteCaptured.Remove(captured);
-                    }
-                } else
-                {
-                    GameObject currentCheckerObject = CheckerCache[i].gobj;
-                    currentCheckerObject.SendMessage("OnCustomDragStart");
-                    Vector3 movePostion = locatePosition(CheckerCache[i].from);
-                    currentCheckerObject.SendMessage("OnCustomDragEnd", new DataPackage(movePostion, true));
-                    cells[from].contents.Add(currentCheckerObject);
-                    cells[to].contents.Remove(currentCheckerObject);
-                    currentCheckerObject.GetComponent<CheckerData>().setPosition(from);
-                }*/
                 CheckerCache.RemoveAt(i);
             }
             dice1IsUsed = false;
@@ -710,6 +677,9 @@ public class BoardScript : MonoBehaviour
             {
             } else if(turns == 2)
             {
+            } else if(!canMove())
+            {
+                print("cantmove");
             } else
             {
                 return false;
@@ -721,6 +691,107 @@ public class BoardScript : MonoBehaviour
             turns = 0;
             print("d");
             return true;
+        }
+        public bool checkerCheckMoveable(int nextPos, int currentPos)
+        {
+
+            if(turn == Kind.White)
+            {
+                if (nextPos < 24)
+                {
+                    if (cells[nextPos].contents.Count == 0)
+                    {
+                        return true;
+                    }
+                    else if (cells[nextPos].contents.Count > 0 && cells[nextPos].contents[0].GetComponent<CheckerData>().getKind() == turn)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    int furthestChecker = 0;
+                    for (int o = 0; o < 19; o++)
+                    {
+                        if (cells[o].contents.Count > 0 && cells[o].contents[0].GetComponent<CheckerData>().getKind() == turn)
+                        {
+                            furthestChecker = o;
+                            break;
+                        }
+                    }
+                    if (furthestChecker == currentPos)
+                    {
+                        return true;
+                    }
+                }
+            } else
+            {
+                if (nextPos > -1)
+                {
+                    if (cells[nextPos].contents.Count == 0)
+                    {
+                        return true;
+                    }
+                    else if (cells[nextPos].contents.Count > 0 && cells[nextPos].contents[0].GetComponent<CheckerData>().getKind() == turn)
+                    {
+                        return true;
+                    }
+                }
+                else
+                {
+                    int furthestChecker = 0;
+                    for (int o = 23; o > 5; o--)
+                    {
+                        if (cells[o].contents.Count > 0 && cells[o].contents[0].GetComponent<CheckerData>().getKind() == turn)
+                        {
+                            furthestChecker = o;
+                            break;
+                        }
+                    }
+                    if (furthestChecker == currentPos)
+                    {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        public bool canMove()
+        {
+            GameObject currentChecker;
+            int currentpos;
+            int check1;
+            int check2;
+
+            for(int i = 0; i < cells.Length;i++)
+            {
+                //if there is a checker, check if it can move
+                if (cells[i].contents.Count > 0 && cells[i].contents[0].GetComponent<CheckerData>().getKind() == turn)
+                {
+                    currentChecker = cells[i].contents[0];
+                    currentpos = currentChecker.GetComponent<CheckerData>().getPosition();
+                    
+                    if(turn == Kind.White)
+                    {
+                        check1 = currentpos + dice1;
+                        check2 = currentpos + dice2;
+                    } else
+                    {
+                        check1 = currentpos - dice1;
+                        check2 = currentpos - dice2;
+                    }
+                    
+
+                    if (checkerCheckMoveable(check1, currentpos) || checkerCheckMoveable(check2, currentpos))
+                    {
+                        return true;
+                    }
+
+
+                }
+            }
+
+            return false;
         }
 
         public bool validateCapture(int from, int to)
@@ -964,28 +1035,37 @@ public class BoardScript : MonoBehaviour
         {
             return turn;
         }
+
+        public bool checkWinner()
+        {
+            if (whiteEscapes == 15)
+            {
+                return true;
+            }
+            if (blackEscapes == 15)
+            {
+                return true;
+            }
+            return false;
+        }
+        public Kind winner()
+        {
+            if(whiteEscapes == 15)
+            {
+                return Kind.White;
+            }
+            if(blackEscapes == 15)
+            {
+                return Kind.Black;
+            }
+            return Kind.White;
+        }
     }
 
     [SerializeField] GameObject whtiecapturedObject;
     [SerializeField] GameObject blackcapturedObject;
     public void GetMoveData(DataPackage dataPackage)
     {
-        /*
-        MoveType moveType = dataPackage.moveType;
-        int to = dataPackage.moveTo;
-        bool valid = false;
-        switch (moveType)
-        {
-            case MoveType.Move:
-                valid = CheckerBoard.MoveChecker(to, dataPackage.checkerObject);
-                break;
-            case MoveType.Capture:
-                valid = CheckerBoard.CaptureChecker();
-                break;
-            case MoveType.Escape:
-                valid = CheckerBoard.EscapeChecker(dataPackage.checkerObject, dataPackage.escapeObject);
-                break;
-        }*/
         bool valid;
         //if the checker is escaping
         if (!dataPackage.escape)
@@ -1046,6 +1126,10 @@ public class BoardScript : MonoBehaviour
     {
         if(CheckerBoard.EndTurn())
         {
+            if(CheckerBoard.checkWinner())
+            {
+                print(CheckerBoard.winner());
+            }
             print("turn ended");
         } else
         {
