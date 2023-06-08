@@ -131,6 +131,7 @@ public class BoardScript : MonoBehaviour
             blackCaptured = new List<GameObject>();
             whiteCaptured = new List<GameObject>();
 
+            /*
             // White has 5-tower at cells 5 and 12.
             CreateCheckers(11, Kind.White, 5);
             CreateCheckers(18, Kind.White, 5);
@@ -149,7 +150,10 @@ public class BoardScript : MonoBehaviour
             CreateCheckers(0, Kind.White, 2);
 
             // Black has a 2-tower at cell 0.
-            CreateCheckers(23, Kind.Black, 2);
+            CreateCheckers(23, Kind.Black, 2);*/
+
+            CreateCheckers(5, Kind.Black, 5);
+            CreateCheckers(18, Kind.White, 5);
         }
 
         private GameObject RemoveChecker(int idx)
@@ -268,29 +272,53 @@ public class BoardScript : MonoBehaviour
                 currentChecker.SendMessage("OnCustomDragEnd", outData);
             }
         }
-        private class checkerCacheObject
+
+        private class checkerMoveCache : checkerCacheObject
         {
-            public GameObject gobj;
+            public GameObject checkerObject;
+            public checkerMoveCache(GameObject checkerObject, int from, int to) : base(from, to)
+            {
+                this.checkerObject = checkerObject;
+            }
+        }
+        private class checkerCaptureCache: checkerCacheObject
+        {
             public GameObject capturer;
             public GameObject captured;
-            public int from;
-            public int to;
-            public checkerCacheObject(GameObject gobj, int from, int to)
-            {
-                this.gobj = gobj;
-                this.from = from;
-                this.to = to;
-            }
-            public checkerCacheObject(GameObject capturer, GameObject captured, int from, int to)
+            public checkerCaptureCache(GameObject capturer, GameObject captured, int from, int to) : base(from, to)
             {
                 this.capturer = capturer;
                 this.captured = captured;
+            }
+        }
+        private class checkerInsertCache: checkerCacheObject
+        {
+            public GameObject checkerObject;
+            public checkerInsertCache(GameObject checkerObject, int from, int to) : base(from, to)
+            {
+                this.checkerObject = checkerObject;
+            }
+        }
+        private class checkerEscapeCache: checkerCacheObject
+        {
+            public GameObject checkerObject;
+            public checkerEscapeCache(GameObject checkerObject, int from, int to) : base(from, to)
+            {
+                this.checkerObject = checkerObject;
+            }
+        }
+        private class checkerCacheObject
+        {
+            public int from;
+            public int to;
+            public checkerCacheObject(int from, int to)
+            {
                 this.from = from;
                 this.to = to;
             }
             public override string ToString()
             {
-                return "obj " + gobj + " from"  + from + " to" + to;
+                return " from"  + from + " to" + to;
             }
         }
         private List<checkerCacheObject> CheckerCache = new List<checkerCacheObject>();
@@ -336,7 +364,7 @@ public class BoardScript : MonoBehaviour
                 cells[from].contents.Remove(currentCheckerObject);
 
                 //cache checker
-                CheckerCache.Add(new checkerCacheObject(currentCheckerObject, from, to));
+                CheckerCache.Add(new checkerMoveCache(currentCheckerObject, from, to));
 
                 //update the checker's position value
                 currentCheckerObject.GetComponent<CheckerData>().setPosition(to);
@@ -388,10 +416,12 @@ public class BoardScript : MonoBehaviour
                 return false;
             }
             int distance;
+            int highestescapee= 0;
             //checks direction
             // if the turn is whtie's
             if (turn == Kind.White)
             {
+                distance = 24 - from;
                 if (from < 18)
                 {
                     print("1");
@@ -409,10 +439,18 @@ public class BoardScript : MonoBehaviour
                         }
                     }
                 }
-                distance = 24 - from;
+                for(int i = 18; i < 24; i++)
+                {
+                    if(cells[i].contents.Count > 0 && cells[i].contents[0].GetComponent<CheckerData>().getKind() == Kind.White)
+                    {
+                        highestescapee = 24 - i;
+                        break;
+                    }
+                }
             }
             else // if turn is black's 
             {
+                distance = from + 1;
                 if (from > 5)
                 {
                     print("3");
@@ -430,7 +468,14 @@ public class BoardScript : MonoBehaviour
                         
                     }
                 }
-                distance = from + 1;
+                for (int i = 5; i >= 0; i--)
+                {
+                    if (cells[i].contents.Count > 0 && cells[i].contents[0].GetComponent<CheckerData>().getKind() == Kind.Black)
+                    {
+                        highestescapee = i + 1;
+                        break;
+                    }
+                }
             }
             // fix for checking max val
             if (dice1 == dice2)
@@ -450,37 +495,68 @@ public class BoardScript : MonoBehaviour
                     print("6");
                     return false;
                 }
-                // dice 1 is choosen
-                if (distance <= dice1 && !dice1IsUsed)
+                //if dice1 covers it, if dice 2 covers it, and then there is no option of covering it
+                if(distance == dice1 && !dice1IsUsed)
                 {
-                    print("7");
+                    print("matchingdiceanddistance");
                     dice1IsUsed = true;
-                }
-                else if (dice1IsUsed && distance <= dice1) // dice 1 is already used Fix here
+
+                } else
+                if(distance == dice2 && !dice2IsUsed)
                 {
-                    print("8");
-                    return false;
-                }
-                // dice 2 is choosen
-                if (distance <= dice2 && !dice2IsUsed)
-                {
-                    print("9");
+                    print("matchingdiceanddistance");
                     dice2IsUsed = true;
-                }
-                else if (dice2IsUsed && distance <= dice2) // dice 2 is already used 
+                } else
+                if(highestescapee > distance) // true means the dice cant be used as less
                 {
-                    print("10");
+                    print("dice cant be used as less");
+                    return false;
+                } else
+                if(dice1 > distance && dice2 > distance)
+                {
+                    if(dice1 > dice2)
+                    {
+                        if(!dice2IsUsed)
+                        {
+                            dice2IsUsed = true;
+                        } else
+                        {
+                            dice1IsUsed = true;
+                        }
+                    } else
+                    {
+                        if (!dice1IsUsed)
+                        {
+                            dice1IsUsed = true;
+                        }
+                        else
+                        {
+                            dice2IsUsed = true;
+                        }
+                    }
+                } else if(dice1> distance)
+                {
+                    if(!dice1IsUsed)
+                    {
+                        dice1IsUsed = true;
+                    }
+                } else if(dice2 > distance)
+                {
+                    if (!dice2IsUsed)
+                    {
+                        dice2IsUsed = true;
+                    }
+                } else
+                {
                     return false;
                 }
-                // no dice is used
-                if (distance > dice1 && distance > dice2)
-                {
-                    print("11");
-                    return false;
-                }
+                
+
             }
 
-            print("1333");
+            print("successfulescape");
+            print(dice1IsUsed);
+            print(dice2IsUsed);
             turns++;
 
 
@@ -521,6 +597,22 @@ public class BoardScript : MonoBehaviour
             SetTurn();
         }
 
+        public void handleBackwardsMovement(GameObject currentCheckerObject, int from, int to) 
+        {
+            currentCheckerObject.SendMessage("OnCustomDragStart");
+            Vector3 movePostion = locatePosition(from);
+            currentCheckerObject.SendMessage("OnCustomDragEnd", new DataPackage(movePostion, true));
+            if(from != 24)
+            {
+                cells[from].contents.Add(currentCheckerObject);
+            }
+            if(to != 24)
+            {
+                cells[to].contents.Remove(currentCheckerObject);
+            }
+            currentCheckerObject.GetComponent<CheckerData>().setPosition(from);
+        }
+
         public void ResetTurn()
         {
             //backwards loop also accounts for the fact that there are multiple cached moves in the list of the same obj
@@ -530,17 +622,52 @@ public class BoardScript : MonoBehaviour
                 int from = CheckerCache[i].from;
                 int to = CheckerCache[i].to;
                 //means its a capture
+                if(CheckerCache[i] is checkerCaptureCache captureCache)
+                {
+                    GameObject capturer = captureCache.capturer;
+                    GameObject captured = captureCache.captured;
+                    cells[to].contents.Remove(capturer);
+                    handleBackwardsMovement(capturer, from, to);
+                    handleBackwardsMovement(captured, to, 24);
+                    if (turn == Kind.White)
+                    {
+                        blackCaptured.Remove(captured);
+                    }
+                    else
+                    {
+                        whiteCaptured.Remove(captured);
+                    }
+                } else if(CheckerCache[i] is checkerMoveCache movecache)
+                {
+                    handleBackwardsMovement(movecache.checkerObject, from, to);
+                } else if(CheckerCache[i] is checkerEscapeCache escache) 
+                {
+                    print("escapeback");
+                    handleBackwardsMovement(escache.checkerObject, from, to);
+                    escache.checkerObject.AddComponent<DragObject>();
+                } else if(CheckerCache[i] is checkerInsertCache incache)
+                {
+                    handleBackwardsMovement(incache.checkerObject, from, to);
+                    if(turn == Kind.White)
+                    {
+                        whiteCaptured.Add(incache.checkerObject);
+                    } else
+                    {
+                        blackCaptured.Add(incache.checkerObject);
+                    }
+                }
+                /*
                 if (CheckerCache[i].gobj == null)
                 {
                     GameObject capturer = CheckerCache[i].capturer;
                     GameObject captured = CheckerCache[i].captured;
                     capturer.SendMessage("OnCustomDragStart");
                     captured.SendMessage("OnCustomDragStart");
+                    cells[to].contents.Remove(capturer);
                     Vector3 capturerMovePosition = locatePosition(from);
                     Vector3 capturedMovePosition = locatePosition(to);
                     capturer.SendMessage("OnCustomDragEnd", new DataPackage(capturerMovePosition, true));
                     captured.SendMessage("OnCustomDragEnd", new DataPackage(capturedMovePosition, true));
-                    cells[to].contents.Remove(capturer);
                     cells[to].contents.Add(captured);
                     cells[from].contents.Add(capturer);
                     capturer.GetComponent<CheckerData>().setPosition(from);
@@ -561,7 +688,7 @@ public class BoardScript : MonoBehaviour
                     cells[from].contents.Add(currentCheckerObject);
                     cells[to].contents.Remove(currentCheckerObject);
                     currentCheckerObject.GetComponent<CheckerData>().setPosition(from);
-                }
+                }*/
                 CheckerCache.RemoveAt(i);
             }
             dice1IsUsed = false;
@@ -612,6 +739,54 @@ public class BoardScript : MonoBehaviour
             {
                 return false;
             }
+            if (turn == Kind.White)
+            {
+                if (from > to)
+                {
+                    return false;
+                }
+            }
+            else // if turn is black's 
+            {
+                if (from < to)
+                {
+                    return false;
+                }
+            }
+            int distance = Mathf.Abs(to - from);
+            if (dice1 == dice2)
+            {
+                if(distance != dice1 || turns > 3)
+                {
+                    return false;
+                }
+            } else
+            {
+                if(turns > 1)
+                {
+                    return false;
+                }
+                // dice 1 is choosen
+                if (distance == dice1 && !dice1IsUsed)
+                {
+                    dice1IsUsed = true;
+                }
+                else if (dice1IsUsed && distance == dice1) // dice 1 is already used 
+                {
+                    return false;
+                }
+                // dice 2 is choosen
+                if (distance == dice2 && !dice2IsUsed)
+                {
+                    dice2IsUsed = true;
+                }
+                else if (dice2IsUsed && distance == dice2) // dice 2 is already used 
+                {
+                    return false;
+                }
+            }
+
+            turns++;
             return true;
         }
         public bool CaptureChecker(int to, GameObject currentCheckerObject, GameObject captureObj)
@@ -631,12 +806,21 @@ public class BoardScript : MonoBehaviour
                 {
                     whiteCaptured.Add(capturingCheckerObject);
                 }
+                
+                //must be done before
+                cells[to].contents.Remove(capturingCheckerObject);
+
                 //fix locate position
                 movePositionCurrent = locatePosition(to);
                 movePositionCapture = locatePosition(24);
 
+                //must be done after
+                cells[from].contents.Remove(currentCheckerObject);
+                cells[to].contents.Add(currentCheckerObject);
+                
+
                 CheckerData captureCheckerData = capturingCheckerObject.GetComponent<CheckerData>();
-                CheckerCache.Add(new checkerCacheObject(currentCheckerObject, captureObj, from, to));
+                CheckerCache.Add(new checkerCaptureCache(currentCheckerObject, capturingCheckerObject, from, to));
 
 
                 captureCheckerData.setPosition(24);
@@ -748,6 +932,7 @@ public class BoardScript : MonoBehaviour
             bool successfulEscape = false;
             if (validateInsertChecker(to))
             {
+                print("insert valid");
                 //remove the amount captured
                 if (turn == Kind.White)
                 {
@@ -765,7 +950,7 @@ public class BoardScript : MonoBehaviour
                 cells[to].contents.Add(currentCheckerObject);
 
                 //fix cache with 24 and locate position
-                CheckerCache.Add(new checkerCacheObject(currentCheckerObject, 24, to));
+                CheckerCache.Add(new checkerInsertCache(currentCheckerObject, 24, to));
 
                 //update teh checker's positon value
                 currentCheckerObject.GetComponent<CheckerData>().setPosition(to);
