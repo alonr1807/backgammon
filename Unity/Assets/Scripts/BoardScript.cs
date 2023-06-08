@@ -10,17 +10,11 @@ public enum Kind
     White,
     Black
 }
-public enum MoveType
-{
-    Capture,
-    Move,
-    Escape
-}
+
 
 
 public class BoardScript : MonoBehaviour
 { 
-    //FIX
     [SerializeField] Text textObject;
 
     [SerializeField] GameObject boardUI;
@@ -58,12 +52,15 @@ public class BoardScript : MonoBehaviour
         private GameObject boardUI;
 
         private GameObject captureObject;
+        private GameObject whiteCaptureObject;
+        private GameObject blackCaptureObject;
 
-        public Board(GameObject parentObject, GameObject boardUI, GameObject captureObject)
+        public Board(GameObject parentObject, GameObject boardUI, GameObject whiteCaptureObject, GameObject blackCaptureObject)
         {
             this.parentObject = parentObject;
             this.boardUI = boardUI;
-            this.captureObject = captureObject;
+            this.whiteCaptureObject = whiteCaptureObject;
+            this.blackCaptureObject = blackCaptureObject;
             Reset();
         }
 
@@ -131,7 +128,7 @@ public class BoardScript : MonoBehaviour
             blackCaptured = new List<GameObject>();
             whiteCaptured = new List<GameObject>();
 
-            /*
+            
             // White has 5-tower at cells 5 and 12.
             CreateCheckers(11, Kind.White, 5);
             CreateCheckers(18, Kind.White, 5);
@@ -150,10 +147,12 @@ public class BoardScript : MonoBehaviour
             CreateCheckers(0, Kind.White, 2);
 
             // Black has a 2-tower at cell 0.
-            CreateCheckers(23, Kind.Black, 2);*/
+            CreateCheckers(23, Kind.Black, 2);
 
-            CreateCheckers(5, Kind.Black, 5);
-            CreateCheckers(18, Kind.White, 5);
+            //CreateCheckers(5, Kind.Black, 5);
+            //CreateCheckers(18, Kind.White, 5);
+            //CreateCheckers(23, Kind.Black, 2);
+            //CreateCheckers(22, Kind.White, 1);
         }
 
         private GameObject RemoveChecker(int idx)
@@ -325,17 +324,31 @@ public class BoardScript : MonoBehaviour
 
         private Vector3 locatePosition(int to)
         {
-            if(to == 24)
-            {
-                Vector3 capturedPosition = captureObject.transform.position;
-                return capturedPosition;
-            }
-            //retrieve the physical position of the spike
-            Vector3 movePostion = boardUI.GetComponent<BoardUI>().spikePositions[to];
-
             float checkerDiameter = 0.05f;
             Vector3 firstCheckerDistance = new Vector3(0f, checkerDiameter / 2, 0f);
             Vector3 distanceBetweenCheckers = new Vector3(0f, checkerDiameter, 0f);
+
+            //handle captured checkers
+            Vector3 capturePosition;
+            if (to == 24)
+            {
+                if (turn == Kind.White)
+                {
+                    capturePosition = blackCaptureObject.transform.position;
+                    capturePosition -= distanceBetweenCheckers * (blackCaptured.Count -1); // subtracting the current
+                    return capturePosition;
+                } else
+                {
+                    capturePosition = whiteCaptureObject.transform.position;
+                    capturePosition += distanceBetweenCheckers * (whiteCaptured.Count - 1); // subtracting the current
+                    return capturePosition;
+                }
+            }
+
+            //retrieve the physical position of the spike
+            Vector3 movePostion = boardUI.GetComponent<BoardUI>().spikePositions[to];
+
+            
             int moveDown = cells[to].contents.Count;
 
             //positon is dependant on the side of the board
@@ -675,16 +688,21 @@ public class BoardScript : MonoBehaviour
         {
             if(dice1 == dice2 && turns == 4)
             {
-            } else if(turns == 2)
+            } else if(turns == 2 && dice1 != dice2)
             {
             } else if(!canMove())
             {
+                if(checkWinner())
+                {
+                    print( winner() + " won");
+                }
                 print("cantmove");
             } else
             {
                 return false;
             }
             clearCheckerCache();
+            //Fix change this
             parentObject.SendMessage("startTurn");
             dice1IsUsed = false;
             dice2IsUsed = false;
@@ -763,6 +781,7 @@ public class BoardScript : MonoBehaviour
             int check1;
             int check2;
 
+            //check board objs
             for(int i = 0; i < cells.Length;i++)
             {
                 //if there is a checker, check if it can move
@@ -788,6 +807,40 @@ public class BoardScript : MonoBehaviour
                     }
 
 
+                }
+            }
+            //check captured objs
+            if (turn == Kind.White)
+            {
+                for (int i = 0; i < whiteCaptured.Count; i++)
+                {
+                    currentChecker = whiteCaptured[i];
+                    currentpos = currentChecker.GetComponent<CheckerData>().getPosition();
+                    
+                    check1 = dice1 + 1;
+                    check2 = dice2 + 1;
+                    
+
+                    if (checkerCheckMoveable(check1, currentpos) || checkerCheckMoveable(check2, currentpos))
+                    {
+                        return true;
+                    }
+                }
+            } else
+            {
+                for (int i = 0; i < blackCaptured.Count; i++)
+                {
+                    currentChecker = blackCaptured[i];
+                    currentpos = currentChecker.GetComponent<CheckerData>().getPosition();
+
+                    check1 = 24 - dice1;
+                    check2 = 24 - dice2;
+
+
+                    if (checkerCheckMoveable(check1, currentpos) || checkerCheckMoveable(check2, currentpos))
+                    {
+                        return true;
+                    }
                 }
             }
 
@@ -860,7 +913,7 @@ public class BoardScript : MonoBehaviour
             turns++;
             return true;
         }
-        public bool CaptureChecker(int to, GameObject currentCheckerObject, GameObject captureObj)
+        public bool CaptureChecker(int to, GameObject currentCheckerObject)
         {
             GameObject capturingCheckerObject = cells[to].contents[0];
             Vector3 movePositionCurrent = new Vector3();
@@ -1072,15 +1125,7 @@ public class BoardScript : MonoBehaviour
         {
             int to = dataPackage.moveTo;
             print("  To: " + to);
-            //if there is a piece that is being captured
-            GameObject captureObj;
-            if (CheckerBoard.getTurn() == Kind.White)
-            {
-                captureObj = whtiecapturedObject;
-            } else
-            {
-                captureObj = blackcapturedObject;
-            }
+            //check insert, check capture, check move
             if(CheckerBoard.checkInsertChecker())
             {
                 print("InsertChecker");
@@ -1088,7 +1133,7 @@ public class BoardScript : MonoBehaviour
             } else if(CheckerBoard.checkCaptureInCell(to))
             {
                 print("CaptureChecker");
-                valid = CheckerBoard.CaptureChecker(to, dataPackage.checkerObject, captureObj);
+                valid = CheckerBoard.CaptureChecker(to, dataPackage.checkerObject);
             } else
             {
                 print("MoveChecker");
@@ -1126,10 +1171,6 @@ public class BoardScript : MonoBehaviour
     {
         if(CheckerBoard.EndTurn())
         {
-            if(CheckerBoard.checkWinner())
-            {
-                print(CheckerBoard.winner());
-            }
             print("turn ended");
         } else
         {
@@ -1140,7 +1181,7 @@ public class BoardScript : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        CheckerBoard = new Board(gameObject, boardUI, blackcapturedObject);
+        CheckerBoard = new Board(gameObject, boardUI, whtiecapturedObject, blackcapturedObject);
         startTurn();
 
 
